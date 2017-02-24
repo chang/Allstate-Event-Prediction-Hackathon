@@ -1,6 +1,8 @@
 ###
 # load dependencies
 ###
+DIRPATH = "~/Documents/Allstate-Event-Prediction-Hackathon"
+setwd(DIRPATH)
 
 pkgs <- c(
 	"dplyr",
