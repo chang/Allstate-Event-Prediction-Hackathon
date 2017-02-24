@@ -1,9 +1,6 @@
 ###
 # loads and featurizes data
 ###
-DIRPATH = "~/Documents/Allstate-Event-Prediction-Hackathon/"
-setwd(DIRPATH)
-
 source("dependencies.R")
 
 
@@ -95,4 +92,9 @@ train <- process_data(train_raw, is_training_data = TRUE)
 
 # data augmentation
 # note: do we want to consider adding test data into this? think about leakage...
-train <- train %>% bind_rows(augment_data(dat=train_raw, train))
+# train <- train %>% bind_rows(augment_data(dat=train_raw, train))
+
+
+# # add id prefix as feature
+# train$prefix <- as.factor(substr(as.character(train$id), 0, 1))
+# test$prefix <- as.factor(substr(as.character(test$id), 0, 1))

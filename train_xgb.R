@@ -1,0 +1,88 @@
+###
+# train, evaluate, and predict with xgboost
+###
+setwd("~/Documents/Allstate-Event-Prediction-Hackathon/")
+source("dependencies.R")
+source("load_process_data.R")
+
+
+eval_cv <- function(evaluation_log){
+    # input: xgb_cross_validation$evaluation_log
+    # output: min test logloss, number of iterations, and dataset size
+    min_index <- which(evaluation_log$test_mlogloss_mean == min(evaluation_log$test_mlogloss_mean))
+    message("Minimum test logloss: ", evaluation_log$test_mlogloss_mean[min_index], 
+            "\nIterations: ", min_index,
+            "\nDataset size: ", length(cv$folds[[1]]) * length(cv$folds))
+    
+    out = list("min_logloss" = evaluation_log$test_mlogloss_mean[min_index],
+               "min_index" = min_index,
+               "n" = length(cv$folds[[1]]) * length(cv$folds))
+    return(out)
+}
+
+
+## TRAIN
+
+# this is a temporary fix for NAs coming out of load_process_data.augment_data()
+train[is.na(train)] <- 0 
+correct_sum_event_counts <- all(apply(select(train, X30018:X45003), 1, sum) == train$count_events)
+assert_that(correct_sum_event_counts) # assert that row sums check out
+
+train_matrix <- sparse.model.matrix(response ~ ., data=select(train, -id))
+response <- as.integer(as.factor(train$response)) - 1
+
+cv <- 
+    xgb.cv(data=train_matrix, 
+           label=response, 
+           objective = "multi:softprob",
+           num_class = 10,
+           eta = .2, 
+           max_depth = 6,
+           nthread = -1,
+           n_jobs = -1,
+           nfold = 3,
+           nrounds = 250, 
+           metrics="mlogloss")
+eval_cv(cv$evaluation_log)
+
+
+fit <- xgboost(data=t, 
+               label=r, 
+               objective = "multi:softprob",
+               num_class = 10,
+               eta = .1, 
+               max_depth = 6,
+               nthread = 6,
+               nrounds = 171, 
+               eval_metric="mlogloss")
+
+## PREDICT
+test_xgb <- sparse.model.matrix( ~ ., data=select(test, -id))
+test_xgb_pred <- predict(fit, test_xgb)  # this will give probability predictions as a vector
+test_xgb_pred_df <- data.frame(matrix(test_xgb_pred, ncol = 10, byrow = T))
+
+# make extra sure we're populating events in the right order
+events <- train$response
+events_coded <- as.integer(train$response) - 1  # if in doubt, check levels with coded vars
+
+names(test_xgb_pred_df) <- paste("event_", levels(events), sep="")
+
+out <- bind_cols(select(test, id), test_xgb_pred_df)
+
+write.csv(out, "eric_submission_2.csv", row.names = F)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
