@@ -100,6 +100,10 @@ train <- process_data(train_raw, is_training_data = TRUE)
 # train <- train %>% bind_rows(augment_data(dat=train_raw, train, n_iter = 1))
 
 
-# # add id prefix as feature
-# train$prefix <- as.factor(substr(as.character(train$id), 0, 1))
-# test$prefix <- as.factor(substr(as.character(test$id), 0, 1))
+# this is a temporary fix for NAs coming out of load_process_data.augment_data()
+train[is.na(train)] <- 0 
+correct_sum_event_counts <- all(apply(select(train, X30018:X45003), 1, sum) == train$count_events)
+assert_that(correct_sum_event_counts) # assert that row sums check out
+
+train_matrix <- sparse.model.matrix(response ~ ., data=select(train, -id))
+response <- as.integer(as.factor(train$response)) - 1
