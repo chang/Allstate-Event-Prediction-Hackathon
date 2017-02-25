@@ -31,29 +31,27 @@ assert_that(correct_sum_event_counts) # assert that row sums check out
 train_matrix <- sparse.model.matrix(response ~ ., data=select(train, -id))
 response <- as.integer(as.factor(train$response)) - 1
 
-cv <- 
-    xgb.cv(data=train_matrix, 
-           label=response, 
+cv <-
+    xgb.cv(data=train_matrix,
+           label=response,
            objective = "multi:softprob",
            num_class = 10,
-           eta = .2, 
+           eta = .1,
            max_depth = 6,
-           nthread = -1,
-           n_jobs = -1,
            nfold = 3,
-           nrounds = 250, 
+           nrounds = 200,
            metrics="mlogloss")
 eval_cv(cv$evaluation_log)
 
 
-fit <- xgboost(data=t, 
-               label=r, 
+fit <- xgboost(data=train_matrix, 
+               label=response, 
                objective = "multi:softprob",
                num_class = 10,
                eta = .1, 
                max_depth = 6,
                nthread = 6,
-               nrounds = 171, 
+               nrounds = 116, 
                eval_metric="mlogloss")
 
 ## PREDICT
@@ -69,7 +67,7 @@ names(test_xgb_pred_df) <- paste("event_", levels(events), sep="")
 
 out <- bind_cols(select(test, id), test_xgb_pred_df)
 
-write.csv(out, "eric_submission_2.csv", row.names = F)
+write.csv(out, "eric_submission_4.csv", row.names = F)
 
 
 

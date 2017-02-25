@@ -23,9 +23,11 @@ process_data <- function(dat, is_training_data){
     # get first event, last event (response), and count of events
     critical_events <- dat %>% group_by(id) %>% 
         summarise(last_event = last(event),
+                  penultimate_event = nth(event, n=-2),
                   first_event = first(event),
                   count_events = n()) %>% 
         mutate(last_event = as.factor(last_event),
+               penultimate_event = as.factor(penultimate_event),
                first_event = as.factor(first_event))
     
     # get frequency counts
@@ -45,17 +47,19 @@ process_data <- function(dat, is_training_data){
 }
 
 
-augment_data <- function(dat, train, max_count_events=100){
+augment_data <- function(dat, train, n_iter){
     # generates more training data by recalculating features
     # on ids with n occured events by removing the nth observation 
     # and setting event[n-1] as response. 
     # iteratively "shaves" dataset down from max n_events to ids with only 2 events
     
     out <- train[0,]  # create empty dataframe with same schema as train
-    valid_ids <- train %>%   # a valid id is one with count_events > 2 (and less than the max)
-        filter((count_events > 2) & (count_events < max_count_events)) 
-        
-    while (max(valid_ids$count_events) > 2){
+    valid_ids <- train %>%   # a valid id is one with count_events > 2
+        filter((count_events > 2)) 
+    iter = 0
+    
+    # shave until n_iter is reached
+    while (max(valid_ids$count_events) > 2 & iter < n_iter){
         dat <- filter(dat, id %in% valid_ids$id)
         
         last_events_to_remove <- dat %>% group_by(id) %>% summarise(last_timestamp = last(timestamp))
@@ -64,7 +68,8 @@ augment_data <- function(dat, train, max_count_events=100){
         valid_ids <- process_data(dat, is_training_data = TRUE)
         out <- out %>% bind_rows(valid_ids)
         
-        message("Shaving event number: ", max(valid_ids$count_events))
+        message("Shaving event number: ", iter + 1)
+        iter = iter + 1
     }
     
     return(out)
@@ -92,7 +97,7 @@ train <- process_data(train_raw, is_training_data = TRUE)
 
 # data augmentation
 # note: do we want to consider adding test data into this? think about leakage...
-# train <- train %>% bind_rows(augment_data(dat=train_raw, train))
+# train <- train %>% bind_rows(augment_data(dat=train_raw, train, n_iter = 1))
 
 
 # # add id prefix as feature
