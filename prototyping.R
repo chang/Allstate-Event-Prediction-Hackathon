@@ -2,8 +2,8 @@
 # Visualize and prototype new features.
 ###
 
-source("dependencies.R")
-source("load_process_data.R")
+source("1-dependencies.R")
+source("2-load_process_data.R")
 require(stats)
 require(scatterplot3d)
 

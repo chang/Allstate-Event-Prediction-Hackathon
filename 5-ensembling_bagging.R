@@ -1,8 +1,8 @@
 ###
 # bag the best submission along with 4 good submissions
 ###
-source("dependencies.R")
-source("load_process_data.R")
+source("1-dependencies.R")
+source("2-load_process_data.R")
 
 predict_xgboost <- function(fit, test){
     ## PREDICT

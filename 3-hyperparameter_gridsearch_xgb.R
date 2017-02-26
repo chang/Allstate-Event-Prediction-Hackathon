@@ -1,8 +1,8 @@
 ###
 # performs hyperparameter gridsearch
 ###
-source("dependencies.R")
-source("load_process_data.R")
+source("1-dependencies.R")
+source("2-load_process_data.R")
 
 DIRECTORY = "xgboost_gridsearch"
 dir.create(DIRECTORY, showWarnings = FALSE)

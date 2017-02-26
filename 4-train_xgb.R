@@ -2,8 +2,8 @@
 # train, evaluate, and predict with xgboost
 ###
 setwd("~/Documents/Allstate-Event-Prediction-Hackathon/")
-source("dependencies.R")
-source("load_process_data.R")
+source("1-dependencies.R")
+source("2-load_process_data.R")
 
 
 eval_cv <- function(evaluation_log){
